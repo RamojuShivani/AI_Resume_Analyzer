@@ -1,6 +1,6 @@
 
 import re
-import fitz
+import pymupdf
 import streamlit as st
 
 st.set_page_config(
@@ -21,6 +21,19 @@ SKILLS_DATABASE = [
     "MySQL", "PostgreSQL", "MongoDB",
     "REST API", "ETL", "Data Warehousing"
 ]
+
+SKILL_ALIASES = {
+    "Machine Learning": ["ML", "machine-learning"],
+    "Deep Learning": ["DL", "deep-learning"],
+    "NLP": ["Natural Language Processing"],
+    "Scikit-learn": ["sklearn", "scikit learn"],
+    "Power BI": ["powerbi"],
+    "AWS": ["Amazon Web Services"],
+    "Azure": ["Microsoft Azure"],
+    "EDA": ["Exploratory Data Analysis"],
+    "REST API": ["RESTful API", "REST APIs"]
+}
+
 
 LEARNING_SUGGESTIONS = {
     "Python": "Practise Python basics, functions, lists, dictionaries and OOP.",
@@ -44,7 +57,7 @@ def extract_pdf_text(pdf_bytes):
     """Extract readable text from an uploaded PDF."""
     text = ""
 
-    with fitz.open(stream=pdf_bytes, filetype="pdf") as document:
+    with pymupdf.open(stream=pdf_bytes, filetype="pdf") as document:
         for page in document:
             text += page.get_text() + "\n"
 
@@ -52,15 +65,25 @@ def extract_pdf_text(pdf_bytes):
 
 
 def extract_skills(text, skills_database):
-    """Find skills from a predefined list using keyword matching."""
+    """Extract skills using keywords and their aliases."""
+
     found_skills = []
     normalized_text = re.sub(r"\s+", " ", text).lower()
 
     for skill in skills_database:
-        pattern = r"(?<!\w)" + re.escape(skill.lower()) + r"(?!\w)"
+        keywords = [skill]
+        keywords.extend(SKILL_ALIASES.get(skill, []))
 
-        if re.search(pattern, normalized_text):
-            found_skills.append(skill)
+        for keyword in keywords:
+            pattern = (
+                r"(?<!\w)" +
+                re.escape(keyword.lower()) +
+                r"(?!\w)"
+            )
+
+            if re.search(pattern, normalized_text):
+                found_skills.append(skill)
+                break
 
     return found_skills
 
