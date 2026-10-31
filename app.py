@@ -1,7 +1,19 @@
-
 import re
 import pymupdf
 import streamlit as st
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle
+)
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+from io import BytesIO
+from datetime import datetime
 
 st.set_page_config(
     page_title="AI Resume Analyzer",
@@ -27,21 +39,13 @@ SKILL_ALIASES = {
     "Deep Learning": ["DL", "deep-learning"],
     "NLP": ["Natural Language Processing"],
     "Scikit-learn": ["sklearn", "scikit learn"],
-    "Power BI": ["powerbi", "power-bi"],
+    "Power BI": ["powerbi"],
     "AWS": ["Amazon Web Services"],
     "Azure": ["Microsoft Azure"],
-    "GCP": ["Google Cloud Platform"],
     "EDA": ["Exploratory Data Analysis"],
-    "REST API": ["RESTful API", "REST APIs"],
-    "Data Analysis": ["Data Analytics"],
-    "Data Visualization": ["Data Viz"],
-    "PostgreSQL": ["Postgres"],
-    "JavaScript": ["JS"],
-    "GitHub": ["Git Hub"],
-    "MySQL": ["My SQL"],
-    "TensorFlow": ["Tensor Flow"],
-    "Scikit-learn": ["scikit learn", "sklearn"]
+    "REST API": ["RESTful API", "REST APIs"]
 }
+
 
 LEARNING_SUGGESTIONS = {
     "Python": "Practise Python basics, functions, lists, dictionaries and OOP.",
@@ -59,7 +63,6 @@ LEARNING_SUGGESTIONS = {
     "Data Analysis": "Practise data cleaning, exploratory analysis and insight generation.",
     "Data Visualization": "Learn chart selection, storytelling and dashboard design."
 }
-
 
 def extract_pdf_text(pdf_bytes):
     """Extract readable text from an uploaded PDF."""
@@ -84,6 +87,7 @@ def extract_skills(text, skills_database):
 
         for keyword in keywords:
             keyword_pattern = re.escape(keyword.lower())
+
             keyword_pattern = keyword_pattern.replace(
                 r"\ ", r"\s+"
             )
@@ -103,11 +107,133 @@ def extract_skills(text, skills_database):
 
 def calculate_match(resume_skills, job_skills):
     """Calculate the percentage of job-description skills found in the resume."""
+
     if not job_skills:
         return 0
 
     matched = set(resume_skills) & set(job_skills)
-    return round((len(matched) / len(set(job_skills))) * 100, 2)
+
+    return round(
+        (len(matched) / len(set(job_skills))) * 100, 2
+    )
+
+
+def generate_pdf_report(
+    match_score,
+    matched_skills,
+    missing_skills,
+    job_skills
+):
+    """Generate a downloadable PDF resume analysis report."""
+
+    buffer = BytesIO()
+
+    document = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=40
+    )
+
+    styles = getSampleStyleSheet()
+    elements = []
+
+    # Report title
+    elements.append(
+        Paragraph(
+            "AI Resume Analyzer - Analysis Report",
+            styles["Title"]
+        )
+    )
+
+    elements.append(Spacer(1, 20))
+
+    # Report date
+    elements.append(
+        Paragraph(
+            f"Generated on: {datetime.now().strftime('%d-%m-%Y %H:%M')}",
+            styles["Normal"]
+        )
+    )
+
+    elements.append(Spacer(1, 20))
+
+    # Summary
+    elements.append(
+        Paragraph("Analysis Summary", styles["Heading2"])
+    )
+
+    summary_data = [
+        ["Metric", "Result"],
+        ["Skill Coverage", f"{match_score}%"],
+        ["Total Required Skills", str(len(job_skills))],
+        ["Matched Skills", str(len(matched_skills))],
+        ["Missing Skills", str(len(missing_skills))]
+    ]
+
+    summary_table = Table(summary_data, colWidths=[250, 200])
+
+    summary_table.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.darkblue),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ("PADDING", (0, 0), (-1, -1), 8),
+    ]))
+
+    elements.append(summary_table)
+    elements.append(Spacer(1, 20))
+
+    # Matched skills
+    elements.append(
+        Paragraph("Matched Skills", styles["Heading2"])
+    )
+
+    if matched_skills:
+        for skill in matched_skills:
+            elements.append(
+                Paragraph(f"&#8226; {skill}", styles["Normal"])
+            )
+    else:
+        elements.append(
+            Paragraph("No matching skills found.", styles["Normal"])
+        )
+
+    elements.append(Spacer(1, 15))
+
+    # Missing skills
+    elements.append(
+        Paragraph("Missing Skills", styles["Heading2"])
+    )
+
+    if missing_skills:
+        for skill in missing_skills:
+            elements.append(
+                Paragraph(f"&#8226; {skill}", styles["Normal"])
+            )
+    else:
+        elements.append(
+            Paragraph("No missing skills found.", styles["Normal"])
+        )
+
+    elements.append(Spacer(1, 20))
+
+    # Disclaimer
+    elements.append(
+        Paragraph(
+            "Disclaimer: This report uses keyword-based skill matching. "
+            "The score represents skill coverage and is not a prediction "
+            "of hiring success.",
+            styles["Italic"]
+        )
+    )
+
+    document.build(elements)
+
+    buffer.seek(0)
+
+    return buffer.getvalue()
 
 
 st.title("📄 AI-Powered Resume Analyzer")
@@ -171,6 +297,13 @@ if st.button("Analyze Resume", type="primary", use_container_width=True):
                     resume_skills, job_skills
                 )
 
+                pdf_report = generate_pdf_report(
+                    match_score,
+                    matched_skills,
+                    missing_skills,
+                    job_skills
+                )
+
             st.divider()
             st.subheader("Analysis Results")
 
@@ -211,7 +344,7 @@ if st.button("Analyze Resume", type="primary", use_container_width=True):
             for skill in missing_skills:
                 if skill in LEARNING_SUGGESTIONS:
                     st.write(
-                        f"**{skill}:** "
+                       f"**{skill}:** "
                         f"{LEARNING_SUGGESTIONS[skill]}"
                     )
                     suggestions_found = True
@@ -234,6 +367,14 @@ if st.button("Analyze Resume", type="primary", use_container_width=True):
                 "Note: Results depend on keyword detection. "
                 "Synonyms, context, experience level and scanned PDFs "
                 "may not be interpreted correctly."
+            )
+
+            st.download_button(
+                label="📥 Download PDF Analysis Report",
+                data=pdf_report,
+                file_name="Resume_Analysis_Report.pdf",
+                mime="application/pdf",
+                use_container_width=True
             )
 
         except Exception as error:
