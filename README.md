@@ -71,6 +71,34 @@ AI_Resume_Analyzer/
 ├── app.py
 └── README.md
 ```
+## Installation and Setup
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/RamojuShivani/AI_Resume_Analyzer.git
+cd AI_Resume_Analyzer
+```
+
+### 2. Install the required dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Run the Streamlit application
+
+```bash
+streamlit run app.py
+```
+
+The application will open in your browser.
+
+## Project Status
+
+The project currently includes a working Streamlit application for PDF resume analysis, skill extraction, and job description matching.
+
+Future updates will focus on improving skill matching accuracy, expanding resume format support, and deploying the application online.
 
 ##  Current Project Status
 
