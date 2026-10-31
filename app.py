@@ -83,11 +83,14 @@ def extract_skills(text, skills_database):
         keywords.extend(SKILL_ALIASES.get(skill, []))
 
         for keyword in keywords:
-            pattern = (
-                r"(?<!\w)" +
-                re.escape(keyword.lower()) +
-                r"(?!\w)"
-            )
+           keyword_pattern = re.escape(keyword.lower())
+keyword_pattern = keyword_pattern.replace(r"\ ", r"\s+")
+
+pattern = (
+    r"(?<!\w)" +
+    keyword_pattern +
+    r"(?!\w)"
+)
 
             if re.search(pattern, normalized_text):
                 found_skills.append(skill)
