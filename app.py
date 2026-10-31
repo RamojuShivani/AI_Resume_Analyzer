@@ -83,21 +83,23 @@ def extract_skills(text, skills_database):
         keywords.extend(SKILL_ALIASES.get(skill, []))
 
         for keyword in keywords:
-           keyword_pattern = re.escape(keyword.lower())
-keyword_pattern = keyword_pattern.replace(r"\ ", r"\s+")
+            keyword_pattern = re.escape(keyword.lower())
+            keyword_pattern = keyword_pattern.replace(
+                r"\ ", r"\s+"
+            )
 
-pattern = (
-    r"(?<!\w)" +
-    keyword_pattern +
-    r"(?!\w)"
-)
+            pattern = (
+                r"(?<!\w)" +
+                keyword_pattern +
+                r"(?!\w)"
+            )
 
             if re.search(pattern, normalized_text):
                 found_skills.append(skill)
                 break
 
     return found_skills
-
+    
 
 def calculate_match(resume_skills, job_skills):
     """Calculate the percentage of job-description skills found in the resume."""
