@@ -27,13 +27,21 @@ SKILL_ALIASES = {
     "Deep Learning": ["DL", "deep-learning"],
     "NLP": ["Natural Language Processing"],
     "Scikit-learn": ["sklearn", "scikit learn"],
-    "Power BI": ["powerbi"],
+    "Power BI": ["powerbi", "power-bi"],
     "AWS": ["Amazon Web Services"],
     "Azure": ["Microsoft Azure"],
+    "GCP": ["Google Cloud Platform"],
     "EDA": ["Exploratory Data Analysis"],
-    "REST API": ["RESTful API", "REST APIs"]
+    "REST API": ["RESTful API", "REST APIs"],
+    "Data Analysis": ["Data Analytics"],
+    "Data Visualization": ["Data Viz"],
+    "PostgreSQL": ["Postgres"],
+    "JavaScript": ["JS"],
+    "GitHub": ["Git Hub"],
+    "MySQL": ["My SQL"],
+    "TensorFlow": ["Tensor Flow"],
+    "Scikit-learn": ["scikit learn", "sklearn"]
 }
-
 
 LEARNING_SUGGESTIONS = {
     "Python": "Practise Python basics, functions, lists, dictionaries and OOP.",
